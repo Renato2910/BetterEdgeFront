@@ -1,115 +1,290 @@
-import Image from "next/image";
-import localFont from "next/font/local";
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+// pages/index.js
+import Link from "next/link";
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [clientes, setClientes] = useState([]);
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("ativo");
+  const [clienteEditando, setClienteEditando] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // Função para buscar clientes do backend
+  useEffect(() => {
+    async function fetchClientes() {
+      try {
+        const response = await fetch("http://127.0.0.1:3000/clientes");
+        const data = await response.json();
+        setClientes(data);
+      } catch (error) {
+        console.error("Erro ao buscar clientes:", error);
+      }
+    }
+    fetchClientes();
+  }, []);
+
+  // Função para adicionar um novo cliente
+  const handleAdicionarCliente = async (e) => {
+    e.preventDefault();
+    try {
+      const novoCliente = { nome, email, status };
+      const response = await fetch("http://127.0.0.1:3000/clientes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(novoCliente),
+      });
+
+      const data = await response.json();
+      setClientes([...clientes, data]);
+      setNome("");
+      setEmail("");
+      setStatus("ativo");
+    } catch (error) {
+      console.error("Erro ao adicionar cliente:", error);
+    }
+  };
+
+  // Função para preencher o formulário com os dados do cliente
+  const handleEditarCliente = (cliente) => {
+    setClienteEditando(cliente);
+    setNome(cliente.nome);
+    setEmail(cliente.email);
+    setStatus(cliente.status);
+  };
+
+  // Função para atualizar o cliente
+  const handleAtualizarCliente = async (e) => {
+    e.preventDefault();
+    try {
+      const clienteAtualizado = { nome, email, status };
+      const response = await fetch(
+        `http://127.0.0.1:3000/clientes/${clienteEditando.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(clienteAtualizado),
+        }
+      );
+
+      const data = await response.json();
+      setClientes(
+        clientes.map((cliente) =>
+          cliente.id === clienteEditando.id ? data : cliente
+        )
+      );
+      setNome("");
+      setEmail("");
+      setStatus("ativo");
+      setClienteEditando(null);
+    } catch (error) {
+      console.error("Erro ao atualizar cliente:", error);
+    }
+  };
+
+  // Função para deletar o cliente
+  const handleDeletarCliente = async (id) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:3000/clientes/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setClientes(clientes.filter((cliente) => cliente.id !== id));
+      } else {
+        console.error("Erro ao deletar cliente");
+      }
+    } catch (error) {
+      console.error("Erro ao deletar cliente:", error);
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      {/* Navbar */}
+      <nav
+        className="bg-gray-800 p-4 rounded-md mb-4"
+        aria-label="Navegação principal"
+      >
+        <ul className="flex space-x-4" role="menubar">
+          <li role="none">
+            <Link
+              href="/"
+              className="text-white hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
+              role="menuitem"
+            >
+              Clientes
+            </Link>
+          </li>
+          <li role="none">
+            <Link
+              href="/ativos"
+              className="text-white hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded"
+              role="menuitem"
+            >
+              Ativos
+            </Link>
+          </li>
+        </ul>
+      </nav>
+
+      {/* Título da Página */}
+      <header className="text-center mb-4" aria-labelledby="page-title">
+        <h1 id="page-title" className="text-3xl font-bold text-slate-50">
+          Clientes
+        </h1>
+      </header>
+
+      {/* Lista de Clientes e Formulário */}
+      <div
+        className="flex flex-col md:flex-row gap-8 justify-center"
+        role="main"
+      >
+        {/* Lista de Clientes à Direita */}
+        <section
+          aria-labelledby="clientes-section"
+          className="w-full md:w-2/3 p-4"
+        >
+          <h2
+            id="clientes-section"
+            className="text-2xl font-bold mb-2 text-slate-50"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Clientes
+          </h2>
+          <ul className="space-y-4" aria-label="Lista de clientes">
+            {clientes.map((cliente) => (
+              <li
+                key={cliente.id}
+                className="border p-4 rounded-md bg-gray-100 hover:bg-gray-200 focus-within:ring-2 focus-within:ring-yellow-400"
+                tabIndex="0"
+                role="listitem"
+                onClick={() => handleEditarCliente(cliente)}
+              >
+                <p className="text-gray-700">
+                  <strong>Nome:</strong> {cliente.nome}
+                </p>
+                <p className="text-gray-700">
+                  <strong>Email:</strong> {cliente.email}
+                </p>
+                <p
+                  className="text-gray-700"
+                  style={{
+                    color: cliente.status === "ativo" ? "green" : "red",
+                  }}
+                >
+                  <strong>Status:</strong>{" "}
+                  <span
+                    className={
+                      cliente.status === "ativo"
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }
+                  >
+                    {cliente.status === "ativo" ? "Ativo" : "Inativo"}
+                  </span>
+                </p>
+
+                {/* Botão para deletar cliente */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Impede o clique de abrir o formulário de edição
+                    handleDeletarCliente(cliente.id);
+                  }}
+                  className="mt-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
+                >
+                  Deletar Cliente
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Formulário para CRUD à Esquerda */}
+        <section
+          aria-labelledby="form-section"
+          className="w-full md:w-1/3 p-4 bg-gray-100 rounded-md mt-4 md:mt-0 flex flex-col justify-between"
+          style={{ height: "100%" }} // Ajusta a altura para ocupar todo o espaço disponível
+        >
+          <h2
+            id="form-section"
+            className="text-2xl font-bold mb-2 text-gray-800"
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            {clienteEditando ? "Editar Cliente" : "Adicionar Cliente"}
+          </h2>
+          {/* Formulário de CRUD */}
+          <form
+            aria-label="Formulário para adicionar ou editar cliente"
+            onSubmit={
+              clienteEditando ? handleAtualizarCliente : handleAdicionarCliente
+            }
+          >
+            <div className="mb-4">
+              <label
+                htmlFor="nome"
+                className="block text-sm font-medium text-gray-800"
+              >
+                Nome:
+              </label>
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Nome do Cliente"
+                aria-required="true"
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-800"
+              >
+                Email:
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder="Email do Cliente"
+                aria-required="true"
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="status"
+                className="block text-sm font-medium text-gray-800"
+              >
+                Status:
+              </label>
+              <select
+                id="status"
+                name="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full p-2 border rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                aria-required="true"
+              >
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              {clienteEditando ? "Atualizar Cliente" : "Adicionar Cliente"}
+            </button>
+          </form>
+        </section>
+      </div>
     </div>
   );
 }
