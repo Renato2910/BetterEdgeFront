@@ -1,4 +1,3 @@
-// pages/index.js
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -9,7 +8,6 @@ export default function Home() {
   const [status, setStatus] = useState("ativo");
   const [clienteEditando, setClienteEditando] = useState(null);
 
-  // Função para buscar clientes do backend
   useEffect(() => {
     async function fetchClientes() {
       try {
@@ -23,7 +21,6 @@ export default function Home() {
     fetchClientes();
   }, []);
 
-  // Função para adicionar um novo cliente
   const handleAdicionarCliente = async (e) => {
     e.preventDefault();
     try {
@@ -46,7 +43,6 @@ export default function Home() {
     }
   };
 
-  // Função para preencher o formulário com os dados do cliente
   const handleEditarCliente = (cliente) => {
     setClienteEditando(cliente);
     setNome(cliente.nome);
@@ -54,7 +50,6 @@ export default function Home() {
     setStatus(cliente.status);
   };
 
-  // Função para atualizar o cliente
   const handleAtualizarCliente = async (e) => {
     e.preventDefault();
     try {
@@ -85,7 +80,6 @@ export default function Home() {
     }
   };
 
-  // Função para deletar o cliente
   const handleDeletarCliente = async (id) => {
     try {
       const response = await fetch(`http://127.0.0.1:3000/clientes/${id}`, {
@@ -138,23 +132,12 @@ export default function Home() {
         </h1>
       </header>
 
-      {/* Lista de Clientes e Formulário */}
-      <div
-        className="flex flex-col md:flex-row gap-8 justify-center"
-        role="main"
-      >
-        {/* Lista de Clientes à Direita */}
-        <section
-          aria-labelledby="clientes-section"
-          className="w-full md:w-2/3 p-4"
-        >
-          <h2
-            id="clientes-section"
-            className="text-2xl font-bold mb-2 text-slate-50"
-          >
-            Clientes
-          </h2>
-          <ul className="space-y-4" aria-label="Lista de clientes">
+      {/* Layout principal */}
+      <div className="flex justify-center items-start min-h-screen">
+        {/* Coluna para listar os clientes */}
+        <section className="w-full md:w-2/3 p-4 overflow-y-auto max-h-[500px]">
+          <h2 className="text-2xl font-bold mb-2 text-slate-50">Clientes</h2>
+          <ul className="space-y-4">
             {clientes.map((cliente) => (
               <li
                 key={cliente.id}
@@ -190,7 +173,7 @@ export default function Home() {
                 {/* Botão para deletar cliente */}
                 <button
                   onClick={(e) => {
-                    e.stopPropagation(); // Impede o clique de abrir o formulário de edição
+                    e.stopPropagation(); 
                     handleDeletarCliente(cliente.id);
                   }}
                   className="mt-2 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -202,21 +185,12 @@ export default function Home() {
           </ul>
         </section>
 
-        {/* Formulário para CRUD à Esquerda */}
-        <section
-          aria-labelledby="form-section"
-          className="w-full md:w-1/3 p-4 bg-gray-100 rounded-md mt-4 md:mt-0 flex flex-col justify-between"
-          style={{ height: "100%" }} // Ajusta a altura para ocupar todo o espaço disponível
-        >
-          <h2
-            id="form-section"
-            className="text-2xl font-bold mb-2 text-gray-800"
-          >
+        {/* Formulário para CRUD de clientes */}
+        <section className="w-full md:w-1/3 p-4 bg-gray-100 rounded-md mx-4">
+          <h2 className="text-2xl font-bold mb-2 text-gray-800">
             {clienteEditando ? "Editar Cliente" : "Adicionar Cliente"}
           </h2>
-          {/* Formulário de CRUD */}
           <form
-            aria-label="Formulário para adicionar ou editar cliente"
             onSubmit={
               clienteEditando ? handleAtualizarCliente : handleAdicionarCliente
             }
@@ -270,7 +244,6 @@ export default function Home() {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 className="w-full p-2 border rounded-md bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                aria-required="true"
               >
                 <option value="ativo">Ativo</option>
                 <option value="inativo">Inativo</option>
@@ -278,7 +251,7 @@ export default function Home() {
             </div>
             <button
               type="submit"
-              className="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
               {clienteEditando ? "Atualizar Cliente" : "Adicionar Cliente"}
             </button>
